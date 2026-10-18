@@ -6,7 +6,7 @@ I built it because I was getting job alerts from Indeed, LinkedIn and Rozee ever
 
 It never applies for me. It only writes new rows. I decide what to do with each job.
 
-![Workflow](screenshots/workflow.png)
+![Workflow]b9f4f76e-image.png
 
 ## How it works
 
