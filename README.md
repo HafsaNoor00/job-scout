@@ -4,7 +4,7 @@ An n8n workflow that reads my job alert emails, pulls out every job with an LLM,
 
 I built it because I was getting job alerts from Indeed, LinkedIn and Rozee every day and reading them all by hand. Most were senior roles or the wrong stack. Now the workflow reads them, and I only open the jobs worth applying to.
 
-It never applies for me. It only writes new rows. I decide what to do with each job.
+It never applies for me. It only writes new rows. I dehcide what to do with each job.
 
 
 ## How it works
@@ -33,6 +33,8 @@ flowchart LR
 8. **Score Job** (Groq, `gpt-oss-20b`, temperature 0) scores each new job from 1 to 10 against my profile and gives a one-line reason.
 9. **Google Sheets** gets a new row with status `New`. A second branch emails me when the score is 8 or more.
 
+![n8n workflow screenshot](workflow.png)
+
 ## Example output
 
 | title | company | score | reason |
@@ -43,6 +45,8 @@ flowchart LR
 | Team Lead Dot Net ERP Developer | ICT Systems | 1 | Team lead role that asks for more than 8 years of experience. |
 
 On this real Indeed email, the extractor found all 4 jobs with the correct job links. It even copied a typo in one title ("Pricipal") exactly as written, which is what I want from extraction.
+![Google Sheets output](sheet.png)
+
 
 
 ## Design decisions
