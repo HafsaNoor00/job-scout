@@ -1,0 +1,559 @@
+{
+  "name": "Job Scout - practice",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f5e90a64-00e0-48df-a55f-7b9a942982ef",
+              "name": "dedupe_key",
+              "value": "={{ $json.company.toLowerCase() }}|{{ $json.title.toLowerCase() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1472,
+        0
+      ],
+      "id": "76837a3f-c9ee-4652-bc23-d43459b4b25e",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "AI Job Applications Tracker",
+          "cachedResultUrl": "YOUR_SHEET_ID"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1836997690,
+          "mode": "list",
+          "cachedResultName": "Job Scout",
+          "cachedResultUrl": "YOUR_SHEET_ID"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "dedupe_key"
+          ],
+          "schema": [
+            {
+              "id": "dedupe_key",
+              "displayName": "dedupe_key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2496,
+        0
+      ],
+      "id": "86cbcc5a-875d-4c9e-bdd2-6bf8b032c4ea",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "vZaxZi00z4AlpNTs",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.text.split('Do not share this email')[0].replace(/https:\\/\\/pk\\.indeed\\.com\\/rc\\/clk\\/dl\\?jk=([a-z0-9]+)\\S*/g, 'https://pk.indeed.com/viewjob?jk=$1').replace(/(https?:\\/\\/(?!pk\\.indeed\\.com\\/viewjob)[^\\s?]+)\\?\\S*/g, '$1').slice(0, 8000) }}",
+        "schemaType": "fromJson",
+        "jsonSchemaExample": "{\n  \"jobs\": [\n    {\n      \"title\": \"AI Engineer Intern\",\n      \"company\": \"Genetech Solutions\",\n      \"location\": \"Karachi\",\n      \"link\": \"https://pk.indeed.com/viewjob?jk=abc123\",\n      \"summary\": \"One sentence from the email describing the role and skills.\"\n    }\n  ]\n}",
+        "options": {
+          "systemPromptTemplate": "Extract every job listing from this job alert email.\nCopy each link exactly as it appears in the email.\nNever invent a job, a company or a link.\nIf a field is missing, leave it as an empty string.\nIf the email contains no job listings, return an empty jobs list.",
+          "batching": {
+            "batchSize": 1,
+            "delayBetweenBatches": 20000
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        672,
+        0
+      ],
+      "id": "3fea5860-f110-4b18-bd87-2e0181020e21",
+      "name": "Information Extractor",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {
+          "temperature": 0
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        528,
+        240
+      ],
+      "id": "bdf9a89b-e3d7-4e53-86e5-b652cc4c37e9",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "8CzqeuHXRofIWWi0",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "output.jobs",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1024,
+        0
+      ],
+      "id": "1bd7bcb7-e6e0-46c4-b5ae-7d09f4de9550",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "39cb6b78-d514-46cd-a176-00b029b8c752",
+              "leftValue": "={{ $json.title }}",
+              "rightValue": "=",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "c4ea717c-266e-4b82-9894-643b1e17dc5a",
+              "leftValue": "={{ $('Gmail Trigger').item.json.text.includes($json.title) }}",
+              "rightValue": "[empty]",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "c3feb58f-dcde-45d0-879c-3ae1e7bd02a9",
+              "leftValue": "={{ $json.link }}",
+              "rightValue": "https://",
+              "operator": {
+                "type": "string",
+                "operation": "startsWith"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        1248,
+        0
+      ],
+      "id": "e64f1082-8a16-465f-ab69-15d0a9ba8bee",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "text": "=Job title: {{ $json.title }}\nCompany: {{ $json.company }}\nLocation: {{ $json.location }}\nSummary: {{ $json.summary }}",
+        "schemaType": "fromJson",
+        "jsonSchemaExample": "{ \"score\": 8, \"reason\": \"Junior AI role in Karachi that matches Python and LLM skills.\" }",
+        "options": {
+          "systemPromptTemplate": "You score how well a job fits the candidate below, using only the job details given.\nFollow the scoring guide exactly. Give the reason in one short sentence.\n\nCANDIDATE PROFILE: Hafsa Noor\n\nTARGET ROLES (best fit first):\nAI Engineer Intern, Junior AI Engineer, AI Automation Engineer,\nData Science Intern, other Computer Science / software internships.\nAlso: business development roles at software houses or tech companies,\nonly if they are not sales-focused.\n\nLOCATION: Karachi (on-site or hybrid), or fully remote.\n\nEXPERIENCE: Fresh graduate (BSCS, University of Karachi, 2025).\nAbout 3 years of remote customer support experience.\nRoles must ask for 2 years of experience or less.\n\nSTRONG SKILLS: Python, SQL, PostgreSQL, Pandas, NumPy, Scikit-learn,\nLLM APIs (Groq), prompt engineering, structured output (Pydantic),\ntext-to-SQL, Whisper, n8n automation, Git, Streamlit.\n\nLEARNING: RAG, embeddings, vector databases, LangChain, FastAPI, Docker.\n\nNOT INTERESTED: senior, lead or principal roles; roles needing more than\n2 years of experience; sales-focused roles; pure MERN/frontend; .NET/ERP.\n\nDEAL-BREAKER: relocation. Jobs outside Karachi that are not remote score 1-2.\nSCORING GUIDE:\n9-10 = target role, junior level, location fits, skills match well.\n6-8  = related role, or a good match with one gap.\n3-5  = a stretch: more experience asked, weak skill match, or relocation.\n1-2  = senior role, more than 2 years required, sales-focused, or requires relocation."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        1920,
+        0
+      ],
+      "id": "61977b75-0b74-4ed0-8115-021dfce2f1af",
+      "name": "Score Job",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-20b",
+        "options": {
+          "temperature": 0
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1776,
+        240
+      ],
+      "id": "431aed9a-13f7-4386-8ac8-6c993eb6b18d",
+      "name": "Groq Chat Model1",
+      "credentials": {
+        "groqApi": {
+          "id": "8CzqeuHXRofIWWi0",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f8e08ecd-925a-4723-8522-055e056ba26b",
+              "name": "=title",
+              "value": "=\"name\": \"=title\",  \"value\": \"={{ $('Edit Fields1').item.json.location }}\"",
+              "type": "string"
+            },
+            {
+              "id": "4857da5e-7b62-4a63-9b6e-ce0072d0277c",
+              "name": "company",
+              "value": "={{ $('Edit Fields1').item.json.company }}",
+              "type": "string"
+            },
+            {
+              "id": "7af20097-54f2-4f55-8ee7-c054855eded8",
+              "name": "location",
+              "value": "={{ $('Edit Fields1').item.json.location }}",
+              "type": "string"
+            },
+            {
+              "id": "0b22175d-fe7d-40bd-afa4-f3b92568182e",
+              "name": "link",
+              "value": "={{ $('Edit Fields1').item.json.link }}",
+              "type": "string"
+            },
+            {
+              "id": "27a9008d-980e-4bae-b822-43c373b740ec",
+              "name": "dedupe_key",
+              "value": "={{ $('Edit Fields1').item.json.dedupe_key }}",
+              "type": "string"
+            },
+            {
+              "id": "2e5e5324-1c56-4e79-9963-936978f5b489",
+              "name": "score",
+              "value": "={{ $json.output.score }}",
+              "type": "number"
+            },
+            {
+              "id": "44cdcc3a-7b37-4765-b6c4-4a687a4ecc95",
+              "name": "reason",
+              "value": "={{ $json.output.reason }}",
+              "type": "string"
+            },
+            {
+              "id": "df0b551a-1754-4127-b227-29bd1b1e2870",
+              "name": "status",
+              "value": "New",
+              "type": "string"
+            },
+            {
+              "id": "16250317-9443-4376-b854-3e8c23d1a439",
+              "name": "date_added",
+              "value": "={{ $now.toFormat('yyyy-MM-dd') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2272,
+        0
+      ],
+      "id": "d484bf64-ce3c-4a28-afa4-1a02b26998f5",
+      "name": "Prepare Row"
+    },
+    {
+      "parameters": {
+        "operation": "removeItemsSeenInPreviousExecutions",
+        "dedupeValue": "={{ $json.dedupe_key }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        1696,
+        0
+      ],
+      "id": "3f39c370-0d1d-44ad-8caa-2647c20e7d0a",
+      "name": "Remove Duplicates"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyX",
+              "value": 10,
+              "unit": "minutes"
+            }
+          ]
+        },
+        "simple": false,
+        "maxResults": 5,
+        "filters": {
+          "q": "from:(jobalert.indeed.com OR jobalerts-noreply@linkedin.com OR rozee.pk)",
+          "readStatus": "both"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        448,
+        0
+      ],
+      "id": "17379f12-81b3-47a2-ba7e-30f727446f68",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "RAxd3VdNSNxDphxc",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "33eb58c0-35d3-4a85-8433-274259f93c5d",
+              "leftValue": "={{ $json.score }}",
+              "rightValue": 8,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        2448,
+        208
+      ],
+      "id": "401c8322-c991-4b0e-9d14-55ece0c2aed4",
+      "name": "Score 8+"
+    },
+    {
+      "parameters": {
+        "sendTo": "you@example.com",
+        "subject": "=Job Scout: {{ $json.score }}/10 - {{ $json.title }} at {{ $json.company }}",
+        "emailType": "text",
+        "message": "={{ $json.reason }}  Apply here: {{ $json.link }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2672,
+        208
+      ],
+      "id": "a1f72fb8-c4d9-4fb1-b6f7-8846f0066e6d",
+      "name": "Send a message",
+      "webhookId": "c7e311fd-f338-4669-83c8-189301196988",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "RAxd3VdNSNxDphxc",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Extractor": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Score Job": {
+      "main": [
+        [
+          {
+            "node": "Prepare Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Score Job",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Row": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Score 8+",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates": {
+      "main": [
+        [
+          {
+            "node": "Score Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Score 8+": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "versionId": "f95d8ac7-9114-4900-b850-85cf788b74c1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4e4e39e757029d665e9d6182073efda795a1920f1cbe27b8628b8b3dca018e4b"
+  },
+  "nodeGroups": [],
+  "id": "0TDMQrjHjO1p5M3k",
+  "tags": []
+}
