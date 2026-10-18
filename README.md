@@ -112,4 +112,4 @@ n8n (self-hosted) · Groq (`openai/gpt-oss-120b`, `openai/gpt-oss-20b`) · Gmail
 
 ---
 
-Built by Hafsa Noor · [LinkedIn](https://www.linkedin.com/in/hafsa-noor-6b70a924a)
+Built by Hafsa Noor · [LinkedIn](https://www.linkedin.com/in/hafsanoorr)
