@@ -6,7 +6,6 @@ I built it because I was getting job alerts from Indeed, LinkedIn and Rozee ever
 
 It never applies for me. It only writes new rows. I decide what to do with each job.
 
-![Workflow]b9f4f76e-image.png
 
 ## How it works
 
@@ -45,7 +44,6 @@ flowchart LR
 
 On this real Indeed email, the extractor found all 4 jobs with the correct job links. It even copied a typo in one title ("Pricipal") exactly as written, which is what I want from extraction.
 
-![Sheet](screenshots/sheet.png)
 
 ## Design decisions
 
