@@ -1,0 +1,714 @@
+{
+  "name": "Job Scout – Application Package",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Job Scout – Application Package",
+        "formDescription": "Paste a job and get a tailored application package",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "job_title",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "company",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "job_link"
+            },
+            {
+              "fieldLabel": "job_description",
+              "fieldType": "textarea",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        -16
+      ],
+      "id": "1e8b0775-a21a-4817-aa4e-7134ac226821",
+      "name": "On form submission",
+      "webhookId": "00000000-0000-0000-0000-000000000001"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b13acb4a-b60f-472d-8333-293ec3bd1e4e",
+              "name": "resume",
+              "value": "PROFILE\nComputer Science graduate (UBIT, 2025) who builds LLM applications and AI automations with Python and n8n, and tests them like production software. My work includes a bilingual voice-to-data assistant with 95% extraction accuracy on a labelled test set, and a live job-matching pipeline that checks every LLM output against its source. Three years in remote customer support showed me where teams lose time, and that is what I automate.\n\nSKILLS\nProgramming: Python, SQL, Java, JavaScript (basic)\nAI & LLMs: LLM APIs (Groq), prompt engineering, structured output (Pydantic), information extraction, text-to-SQL, speech-to-text (Whisper), LLM evaluation with labelled test sets\nAutomation & Backend: n8n, Gmail and Google Sheets APIs, OAuth 2.0, REST APIs, Streamlit, Git/GitHub, Linux\nData & Databases: PostgreSQL, SQLite, Pandas, NumPy, Scikit-learn, TensorFlow\n\nPROJECTS\nAwaazOps (Python, Groq Whisper and GPT-OSS 120B, Pydantic, SQLite, Streamlit)\n- Built a voice-first assistant that turns Urdu, Roman Urdu and English voice notes into structured operational events, validated with Pydantic and retried once on invalid output.\n- Reached 95% fully correct extraction (100% on order numbers and carton counts) with 0.7 s average latency on a labelled set of 20 messages.\n- Kept decisions out of the LLM: Python rules raise alerts, results below 70% confidence go to a human approval queue, and text-to-SQL runs behind a read-only guardrail.\n\nJob Scout (n8n, Groq GPT-OSS, Gmail API, Google Sheets API, OAuth 2.0)\n- Built a live n8n workflow that reads Indeed, LinkedIn and Rozee job alerts, extracts every listing with an LLM, scores each job 1-10 against my profile with a reason, logs it to Google Sheets and emails me jobs scoring 8+.\n- Blocked hallucinated jobs by checking every extracted title against the source email, and blocked duplicates across runs with a normalized company-and-title key.\n- Stayed within Groq's free-tier rate limit by cleaning emails before the LLM, batching requests and using a smaller model for the scoring step.\n\nSales Data Analyzer & CSV-to-PostgreSQL Pipeline (Python, Pandas, NumPy, SQL, PostgreSQL)\n- Built a Pandas/NumPy pipeline that cleans, groups and analyzes real-world sales data, replacing manual spreadsheet review with a repeatable script.\n- Loaded the cleaned data into PostgreSQL and wrote SQL queries (joins, aggregations, filtering) for analysis from Python.\n\nCV-Genie, Final Year Project (.NET Framework, AI/ML integration, SQL)\n- Owned the AI-driven CV rating and ranking engine, built to process 50 CVs at a time for bulk HR review.\n- Also built the bulk CV upload flow, a portfolio-website generator and an AI guidance chatbot.\n\nWORK EXPERIENCE\nCustomer Support Specialist, VA Hub Pro (Remote), 2023 to present\n- Managed customer queries and data/reporting tasks using Zendesk, Slack, 1Password, Loom, and GoHighLevel.\n- Built automations and AI-powered chatbots that took over repetitive support responses, freeing up time for complex queries.\n- Collaborated with cross-functional remote teams to keep operations running smoothly.\n\nEDUCATION\nBSCS, Karachi University (UBIT), 2022 to 2025",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        -16
+      ],
+      "id": "8e94e67d-0637-445c-bab4-63f608ef6c6a",
+      "name": "My Resume"
+    },
+    {
+      "parameters": {
+        "text": "=JOB DESCRIPTION:\n{{ $('On form submission').first().json.job_description.slice(0, 6000) }}\n\nMY RESUME:\n{{ $('My Resume').first().json.resume }}",
+        "schemaType": "fromJson",
+        "jsonSchemaExample": "{ \"bullets\": [\"...\", \"...\"], \"matched_skills\": [\"Python\"] }",
+        "options": {
+          "systemPromptTemplate": "You tailor Hafsa's resume for one job.\nRewrite EVERY bullet under PROJECTS and WORK EXPERIENCE in MY RESUME, all 13, in this exact order: 3 AwaazOps, 3 Job Scout, 2 Sales Data Analyzer, 2 CV-Genie, 3 VA Hub Pro.\nYou may change verbs and word order, and move the most relevant details to the front of a bullet.\nNEVER append phrases to the end of a bullet. NEVER add new claims about who Hafsa worked with, her responsibilities or outcomes.\nIf a bullet does not match the job, return it unchanged. Unchanged is better than stretched.\nRules:\n- Only reword. Never add a tool, skill, number, company or result that is not in MY RESUME.\n- Keep every number exactly as written. Never change \"built to process\" into \"processed\".\n- Keep each bullet about the same length as the original, so the resume stays one page.\n- Return exactly 13 bullets.\n- Keep the main idea of each bullet. Never change \"Owned\" to \"Led\". Keep \"Kept decisions out of the LLM\" wording.\nmatched_skills: only skills from the SKILLS section of MY RESUME that the job asks for."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        448,
+        -16
+      ],
+      "id": "cfffc72f-1699-43f9-bdcb-f7370944e0f0",
+      "name": "Tailor Bullets",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {
+          "temperature": 0
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        528,
+        224
+      ],
+      "id": "51a22766-90ce-4db5-9494-e692a63f2065",
+      "name": "Groq Chat Model"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Get the source of truth and the LLM output\nconst resume = $('My Resume').first().json.resume.toLowerCase();\nconst out = $input.first().json.output;\nconst bullets = (out.bullets || []).map(b => b.replace(/[\\u2010-\\u2015\\u2212]/g, '-').replace(/[\\u00a0\\u202f]/g, ' '));\nconst skills = out.matched_skills || [];\nconst text = [...bullets, ...skills].join(' \\n ').toLowerCase();\n\n// 2. Tech words to watch for\nconst techWords = ['python','sql','java','javascript','typescript','react','node.js','django','flask','fastapi',\n  'langchain','llamaindex','rag','vector database','pinecone','chroma','faiss','openai','groq','whisper',\n  'pydantic','sqlite','postgresql','mysql','mongodb','streamlit','n8n','zapier','docker','kubernetes',\n  'aws','azure','gcp','pytorch','tensorflow','scikit-learn','pandas','numpy','spark','airflow',\n  'hugging face','fine-tuning','.net','power bi','tableau','ci/cd'];\n\nconst flags = [];\n\n// 3. Flag any tech word that is in the output but NOT in the resume\nfor (const w of techWords) {\n  const safe = w.replace(/[.*+?^${}()|[\\]\\\\\\/]/g, '\\\\$&');\n  const re = new RegExp('(?<![a-z0-9])' + safe + '(?![a-z0-9])', 'i');\n  if (re.test(text) && !re.test(resume)) flags.push('New tool: ' + w);\n}\n\n// 4. Flag any number that is not in the resume\nfor (const n of text.match(/\\d+(\\.\\d+)?%?/g) || []) {\n  if (!resume.includes(n)) flags.push('New number: ' + n);\n}\n// Novelty check + auto-repair: if a bullet adds too many new words, use the original bullet instead\nconst resumeRaw = $('My Resume').first().json.resume;\nconst originals = resumeRaw.split('\\n').filter(l => l.trim().startsWith('- ')).map(l => l.trim().slice(2));\nconst resumeWords = new Set(resume.match(/[a-z][a-z-]{3,}/g));\nbullets.forEach((b, i) => {\n  const words = (b.toLowerCase().match(/[a-z][a-z-]{3,}/g) || []);\n  const newWords = [...new Set(words.filter(w => !resumeWords.has(w)))];\n  if (newWords.length > 3 && originals[i]) {\n    flags.push('Bullet ' + (i + 1) + ' reverted (added: ' + newWords.join(', ') + ')');\n    bullets[i] = originals[i];\n  }\n});\nif (bullets.length !== 13) flags.push('Expected 13 bullets, got ' + bullets.length);\nreturn [{ json: { bullets, matched_skills: skills, flags: [...new Set(flags)], passed: flags.length === 0 } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        -16
+      ],
+      "id": "e33c1510-b709-41dd-99c8-728153202829",
+      "name": "Guardrail"
+    },
+    {
+      "parameters": {
+        "text": "=JOB: {{ $('On form submission').first().json.job_title }} at {{ $('On form submission').first().json.company }}\n\nJOB DESCRIPTION:\n{{ $('On form submission').first().json.job_description.slice(0, 4000) }}\n\nTAILORED BULLETS:\n{{ $('Guardrail').first().json.bullets.join('\\n') }}",
+        "schemaType": "fromJson",
+        "jsonSchemaExample": "{ \"cover_letter\": \"Dear Hiring Manager, ...\", \"dm\": \"Hi, I just applied for ...\" }",
+        "options": {
+          "systemPromptTemplate": "You write for Hafsa Noor, a BSCS graduate applying for AI roles.\nThe JOB DESCRIPTION only tells you what the company wants. NEVER claim any skill, tool or experience from it.\nEvery claim about Hafsa must come from TAILORED BULLETS. If a job requirement is not in TAILORED BULLETS, do not mention it.\ncover_letter: under 200 words. Name the company and the job title. Plain, confident tone. Do not use the words: passion, passionate, excited, eager, thrilled. End with \"Hafsa Noor\".\ndm: a LinkedIn message to a recruiter, under 300 characters, polite and direct, mentioning the job title. Same rules."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        1024,
+        -16
+      ],
+      "id": "877096b7-e0a5-44cd-8efd-40bc54327654",
+      "name": "Write Letter & DM",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-20b",
+        "options": {
+          "temperature": 0
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1104,
+        224
+      ],
+      "id": "9b60f5bc-a69d-4374-a95d-cedb7e4ffeba",
+      "name": "Groq Chat Model1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const resume = $('My Resume').first().json.resume.toLowerCase();\nconst out = $input.first().json.output;\nconst clean = s => (s || '').replace(/[\\u2010-\\u2015\\u2212]/g, '-').replace(/[\\u00a0\\u202f]/g, ' ');\nconst letter = clean(out.cover_letter);\nconst dm = clean(out.dm);\nconst text = (letter + ' \\n ' + dm).toLowerCase();\n\nconst techWords = ['react','next.js','node.js','express','mongodb','mysql','typescript','docker','kubernetes',\n  'aws','azure','gcp','langchain','rag','pytorch','fastapi','django','flask','optimization','end-to-end',\n  'full-stack','frontend','ai-assisted coding','user-centric'];\nconst cliches = ['passion','passionate','excited','eager','thrilled'];\n\nconst flags = [];\nfor (const w of techWords) {\n  const safe = w.replace(/[.*+?^${}()|[\\]\\\\\\/]/g, '\\\\$&');\n  const re = new RegExp('(?<![a-z0-9])' + safe + '(?![a-z0-9])', 'i');\n  if (re.test(text) && !re.test(resume)) flags.push('Not in resume: ' + w);\n}\nfor (const c of cliches) if (text.includes(c)) flags.push('Cliché: ' + c);\n\nreturn [{ json: { cover_letter: letter, dm: dm, letter_flags: [...new Set(flags)], letter_passed: flags.length === 0 } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1376,
+        -16
+      ],
+      "id": "2b994943-3799-42b1-ab13-533ed939acad",
+      "name": "Letter Check"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e3fba69e-4392-484c-a680-24b0d13604ea",
+              "name": "=search_url",
+              "value": "=https://www.google.com/search?q={{ encodeURIComponent('site:linkedin.com/in \"' + $('On form submission').first().json.company.replace(/\\(pvt\\)|\\(private\\)|pvt\\.?|private|ltd\\.?|limited/gi, '').replace(/\\s+/g, ' ').trim() + '\" (recruiter OR \"talent acquisition\" OR HR)') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1600,
+        -16
+      ],
+      "id": "490a705a-985c-48a0-8973-d9c2ac1bf864",
+      "name": "Search Link"
+    },
+    {
+      "parameters": {
+        "operation": "copy",
+        "fileId": {
+          "__rl": true,
+          "value": "YOUR_TEMPLATE_DOC_ID",
+          "mode": "id"
+        },
+        "name": "=Hafsa_Noor_Resume_{{ $('On form submission').first().json.company.replace(/\\(pvt\\)|pvt\\.?|ltd\\.?|limited/gi, '').trim() }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1824,
+        -16
+      ],
+      "id": "a6cb5a5d-1c04-4c23-ba7c-6e12c359851d",
+      "name": "Copy Template"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{ $('Copy Template').first().json.id }}",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "replaceAll",
+              "text": "{{B1}}",
+              "replaceText": "={{ $('Guardrail').first().json.bullets[0] }}",
+              "matchCase": true
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{B2}}",
+              "replaceText": "={{ $('Guardrail').first().json.bullets[1] }}",
+              "matchCase": true
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{B3}}",
+              "replaceText": "={{ $('Guardrail').first().json.bullets[2] }}",
+              "matchCase": true
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{B4}}",
+              "replaceText": "={{ $('Guardrail').first().json.bullets[3] }}",
+              "matchCase": true
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{B5}}",
+              "replaceText": "={{ $('Guardrail').first().json.bullets[4] }}",
+              "matchCase": true
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{B6}}",
+              "replaceText": "={{ $('Guardrail').first().json.bullets[5] }}",
+              "matchCase": true
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{B7}}",
+              "replaceText": "={{ $('Guardrail').first().json.bullets[6] }}",
+              "matchCase": true
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{B8}}",
+              "replaceText": "={{ $('Guardrail').first().json.bullets[7] }}",
+              "matchCase": true
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{B9}}",
+              "replaceText": "={{ $('Guardrail').first().json.bullets[8] }}",
+              "matchCase": true
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{B10}}",
+              "replaceText": "={{ $('Guardrail').first().json.bullets[9] }}",
+              "matchCase": true
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{B11}}",
+              "replaceText": "={{ $('Guardrail').first().json.bullets[10] }}",
+              "matchCase": true
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{B12}}",
+              "replaceText": "={{ $('Guardrail').first().json.bullets[11] }}",
+              "matchCase": true
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{B13}}",
+              "replaceText": "={{ $('Guardrail').first().json.bullets[12] }}",
+              "matchCase": true
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        2048,
+        -16
+      ],
+      "id": "f38ecac0-04da-4009-b20e-b1987504118b",
+      "name": "Fill Resume"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Copy Template').first().json.id }}",
+          "mode": "id"
+        },
+        "options": {
+          "googleFileConversion": {
+            "conversion": {
+              "docsToFormat": "application/pdf",
+              "drawingsToFormat": "application/pdf"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2272,
+        -16
+      ],
+      "id": "a14c3118-6c5f-4031-aeeb-3344bb094f9f",
+      "name": "Export PDF"
+    },
+    {
+      "parameters": {
+        "name": "={{ $('Copy Template').first().json.name.replace(/\\s+/g, '_') }}.pdf",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "root",
+          "mode": "list"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2496,
+        -16
+      ],
+      "id": "e03a65e8-34b0-40ea-aab6-bb97fc382a05",
+      "name": "Save PDF"
+    },
+    {
+      "parameters": {
+        "folderId": "YOUR_FOLDER_ID",
+        "title": "=Package – {{ $('On form submission').first().json.company }} – {{ $('On form submission').first().json.job_title }}"
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        2720,
+        -16
+      ],
+      "id": "9663eaed-679c-4d9b-80a5-e88e6303d071",
+      "name": "Create Package"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{ $('Create Package').first().json.id }}",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "insert",
+              "text": "=APPLICATION PACKAGE\n{{ $('On form submission').first().json.job_title }} at {{ $('On form submission').first().json.company }}\nJob link: {{ $('On form submission').first().json.job_link }}\n\nTAILORED RESUME (PDF)\nhttps://drive.google.com/file/d/{{ $('Save PDF').first().json.id }}/view\n\nCHECKS\nResume guardrail: {{ $('Guardrail').first().json.passed ? 'PASSED' : 'CHECK → ' + $('Guardrail').first().json.flags.join(', ') }}\nLetter check: {{ $('Letter Check').first().json.letter_passed ? 'PASSED' : 'CHECK → ' + $('Letter Check').first().json.letter_flags.join(', ') }}\n\nCOVER LETTER (edit the opening and closing before sending)\n{{ $('Letter Check').first().json.cover_letter }}\n\nLINKEDIN DM\n{{ $('Letter Check').first().json.dm }}\n\nFIND THE RECRUITER\n{{ $('Search Link').first().json.search_url }}\n\nBEFORE YOU APPLY\n[ ] Read every resume bullet: true and interview-proof?\n[ ] Edited the cover letter opening and closing\n[ ] Found a recruiter and replaced [Recruiter] in the DM"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        2944,
+        -16
+      ],
+      "id": "73db3abf-5295-4a1b-8897-bbe36ea5d7ce",
+      "name": "Write Package"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Applications",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "date": "={{ $now.toFormat('yyyy-MM-dd') }}",
+            "job_title": "={{ $('On form submission').first().json.job_title }}",
+            "job_link": "={{ $('On form submission').first().json.job_link }}",
+            "resume_pdf": "=https://drive.google.com/file/d/{{ $('Save PDF').first().json.id }}/view",
+            "package_doc": "=https://docs.google.com/document/d/{{ $('Create Package').first().json.id }}/edit",
+            "checks": "={{ $('Guardrail').first().json.passed && $('Letter Check').first().json.letter_passed ? 'Passed' : 'Review' }}",
+            "status": "Ready",
+            "company": "={{ $('On form submission').first().json.company }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "job_title",
+              "displayName": "job_title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "job_link",
+              "displayName": "job_link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "resume_pdf",
+              "displayName": "resume_pdf",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "package_doc",
+              "displayName": "package_doc",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "checks",
+              "displayName": "checks",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3168,
+        -16
+      ],
+      "id": "00508920-b199-4823-a7cd-98a80afe5166",
+      "name": "Log Application"
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "respondWith": "redirect",
+        "redirectUrl": "=https://docs.google.com/document/d/{{ $('Create Package').first().json.id }}/edit",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.5,
+      "position": [
+        3392,
+        -16
+      ],
+      "id": "e5d91cb1-6d1b-48f9-bf8a-be2106861d19",
+      "name": "Form Ending",
+      "webhookId": "00000000-0000-0000-0000-000000000002"
+    }
+  ],
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "My Resume",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "My Resume": {
+      "main": [
+        [
+          {
+            "node": "Tailor Bullets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Tailor Bullets",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tailor Bullets": {
+      "main": [
+        [
+          {
+            "node": "Guardrail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardrail": {
+      "main": [
+        [
+          {
+            "node": "Write Letter & DM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Write Letter & DM",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Letter & DM": {
+      "main": [
+        [
+          {
+            "node": "Letter Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Letter Check": {
+      "main": [
+        [
+          {
+            "node": "Search Link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Link": {
+      "main": [
+        [
+          {
+            "node": "Copy Template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Copy Template": {
+      "main": [
+        [
+          {
+            "node": "Fill Resume",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fill Resume": {
+      "main": [
+        [
+          {
+            "node": "Export PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Export PDF": {
+      "main": [
+        [
+          {
+            "node": "Save PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save PDF": {
+      "main": [
+        [
+          {
+            "node": "Create Package",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Package": {
+      "main": [
+        [
+          {
+            "node": "Write Package",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Package": {
+      "main": [
+        [
+          {
+            "node": "Log Application",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Application": {
+      "main": [
+        [
+          {
+            "node": "Form Ending",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Form Ending": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "tags": [],
+  "pinData": {}
+}
